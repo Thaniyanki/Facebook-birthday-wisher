@@ -1,0 +1,28 @@
+function onEdit(e) {
+  // Get the edited range and sheet
+  var range = e.range;
+  var sheet = range.getSheet();
+  
+  // Check if the edit is in columns B-G (columns 2-7)
+  var editedColumn = range.getColumn();
+  if (editedColumn < 2 || editedColumn > 7) return;
+  
+  // Get all affected rows (handles single cell or range edits)
+  var editedRows = [];
+  for (var i = 0; i < range.getNumRows(); i++) {
+    editedRows.push(range.getRow() + i);
+  }
+  
+  // Get current date/time in DD-MM-YYYY HH:MM:SS format
+  var timezone = Session.getScriptTimeZone();
+  var timestamp = Utilities.formatDate(new Date(), timezone, "dd-MM-yyyy HH:mm:ss");
+  
+  // Update column A for all affected rows
+  editedRows.forEach(function(row) {
+    // Skip header row (assuming row 1 is header)
+    if (row === 1) return;
+    
+    sheet.getRange(row, 1).setValue(timestamp);
+    sheet.getRange(row, 1).setNumberFormat("dd-mm-yyyy hh:mm:ss");
+  });
+}
