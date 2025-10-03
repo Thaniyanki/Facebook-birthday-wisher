@@ -375,6 +375,104 @@ def update_google_sheet(client):
             print(f"❌ Sheet update failed: {str(e)}")
             time.sleep(1)
 
+# ================================
+# WHATSAPP FUNCTIONS WITH ENHANCED LOADING DETECTION
+# ================================
+
+def search_and_click_whatsapp_xpath001(whatsapp_xpath001):
+    """Search and click WhatsApp Xpath001 with enhanced loading chats detection"""
+    start_time = time.time()
+    refresh_count = 0
+    
+    while True:
+        try:
+            element = driver.find_element("xpath", whatsapp_xpath001)
+            element.click()
+            print("✅ WhatsApp Xpath001 is clicked ready to search phone number")
+            return True
+            
+        except NoSuchElementException:
+            current_time = time.time()
+            elapsed = current_time - start_time
+            
+            if elapsed >= 120:
+                # Check for "Loading your chats" keyword at 121st second
+                print("⏳ 120 seconds completed - checking for 'Loading your chats'...")
+                
+                try:
+                    # Search for "Loading your chats" text in the page
+                    loading_element = driver.find_element("xpath", "//*[contains(text(), 'Loading your chats')]")
+                    print("🔍 'Loading your chats' keyword found - waiting for it to disappear...")
+                    
+                    # Wait for loading to complete (disappear) with internet checking
+                    loading_wait_start = time.time()
+                    last_internet_check = 0
+                    internet_check_interval = 5  # Check internet every 5 seconds
+                    
+                    while True:
+                        current_loading_time = time.time()
+                        loading_elapsed = current_loading_time - loading_wait_start
+                        
+                        # Check internet every 5 seconds
+                        if current_loading_time - last_internet_check >= internet_check_interval:
+                            last_internet_check = current_loading_time
+                            
+                            if check_internet():
+                                print("🌐 Internet available - continuing to wait for loading...")
+                            else:
+                                print("❌ Internet not available while loading - refreshing page")
+                                refresh_count += 1
+                                print(f"🔄 Refreshing page (Attempt {refresh_count})...")
+                                driver.refresh()
+                                start_time = time.time()
+                                time.sleep(3)
+                                break
+                        
+                        try:
+                            # Check if loading text still exists
+                            driver.find_element("xpath", "//*[contains(text(), 'Loading your chats')]")
+                            
+                            sys.stdout.write(f'\r⏳ Waiting for chats to load... ({int(loading_elapsed)}s)')
+                            sys.stdout.flush()
+                            time.sleep(1)
+                            
+                        except NoSuchElementException:
+                            # Loading completed - continue with current flow
+                            print("\n✅ Chats loading completed - continuing flow")
+                            # Try clicking Xpath001 again now that loading is done
+                            try:
+                                element = driver.find_element("xpath", whatsapp_xpath001)
+                                element.click()
+                                print("✅ WhatsApp Xpath001 is clicked ready to search phone number")
+                                return True
+                            except NoSuchElementException:
+                                # If still not found after loading, refresh
+                                print("❌ Xpath001 still not found after loading - refreshing page")
+                                refresh_count += 1
+                                print(f"🔄 Refreshing page (Attempt {refresh_count})...")
+                                driver.refresh()
+                                start_time = time.time()
+                                time.sleep(3)
+                                break
+                            
+                except NoSuchElementException:
+                    # "Loading your chats" not found at 121st second - refresh page
+                    print("❌ 'Loading your chats' not found at 121st second - refreshing page")
+                    refresh_count += 1
+                    print(f"🔄 Refreshing page (Attempt {refresh_count})...")
+                    driver.refresh()
+                    start_time = time.time()
+                    time.sleep(3)
+                    
+            else:
+                sys.stdout.write(f'\r🔍 Searching for WhatsApp XPath001... ({int(elapsed)}s)')
+                sys.stdout.flush()
+                time.sleep(1)
+                
+        except Exception as e:
+            print(f"❌ Error during WhatsApp XPath001 search: {str(e)}")
+            return False
+
 def open_whatsapp_and_fetch_xpath():
     """Open WhatsApp and fetch XPath"""
     close_chrome()
@@ -383,15 +481,15 @@ def open_whatsapp_and_fetch_xpath():
         print("❌ Failed to open WhatsApp Web")
         return None
     
-    print("Entered WhatsApp Web")
+    print("✅ Entered WhatsApp Web")
     
     whatsapp_xpath001 = fetch_xpath_from_firebase("Xpath001", "WhatsApp")
     return whatsapp_xpath001
 
 def click_whatsapp_search_and_paste_number(whatsapp_xpath001):
-    """Click search and paste number"""
+    """Click search and paste number with enhanced loading detection"""
     while True:
-        if search_and_click_element(whatsapp_xpath001, "WhatsApp Xpath001 is clicked ready to search phone number"):
+        if search_and_click_whatsapp_xpath001(whatsapp_xpath001):
             break
         print("🔄 Restarting WhatsApp search click process...")
     
@@ -404,7 +502,7 @@ def click_whatsapp_search_and_paste_number(whatsapp_xpath001):
                 
                 search_box = driver.switch_to.active_element
                 search_box.send_keys(phone_number)
-                print(f"Mobile number transferred from text file to WhatsApp phone number search field: {phone_number}")
+                print(f"📱 Mobile number transferred from text file to WhatsApp phone number search field: {phone_number}")
                 return True
                 
         except Exception as e:
@@ -413,7 +511,7 @@ def click_whatsapp_search_and_paste_number(whatsapp_xpath001):
             time.sleep(1)
 
 def press_down_arrow_and_enter_message_field():
-    """Complete WhatsApp message field entry"""
+    """Complete WhatsApp message field entry with enhanced loading awareness"""
     print("⏳ Waiting 10 seconds for stability...")
     time.sleep(10)
     
@@ -426,20 +524,58 @@ def press_down_arrow_and_enter_message_field():
         return False
     
     whatsapp_xpath002 = fetch_xpath_from_firebase("Xpath002", "WhatsApp")
-    print("WhatsApp Xpath002 fetched from database")
+    print("✅ WhatsApp Xpath002 fetched from database")
     
     start_time = time.time()
     while True:
         try:
-            if search_and_click_element(whatsapp_xpath002, "Entered into Type a message field"):
+            if search_and_click_element(whatsapp_xpath002, "✅ Entered into Type a message field"):
                 return True
             
             elapsed = time.time() - start_time
             if elapsed >= 120:
-                print("🔄 WhatsApp Xpath002 not found within 120 seconds - restarting process")
-                close_chrome()
-                return False
+                print("🔄 WhatsApp Xpath002 not found within 120 seconds - checking for loading chats...")
                 
+                # Check for "Loading your chats" before refreshing
+                try:
+                    loading_element = driver.find_element("xpath", "//*[contains(text(), 'Loading your chats')]")
+                    print("🔍 'Loading your chats' found - waiting for completion with internet check...")
+                    
+                    loading_wait_start = time.time()
+                    last_internet_check = 0
+                    internet_check_interval = 5
+                    
+                    while True:
+                        current_loading_time = time.time()
+                        loading_elapsed = current_loading_time - loading_wait_start
+                        
+                        # Check internet every 5 seconds
+                        if current_loading_time - last_internet_check >= internet_check_interval:
+                            last_internet_check = current_loading_time
+                            
+                            if check_internet():
+                                print("🌐 Internet available - continuing to wait for loading...")
+                            else:
+                                print("❌ Internet not available while loading - restarting process")
+                                close_chrome()
+                                return False
+                        
+                        try:
+                            driver.find_element("xpath", "//*[contains(text(), 'Loading your chats')]")
+                            sys.stdout.write(f'\r⏳ Waiting for chats to load... ({int(loading_elapsed)}s)')
+                            sys.stdout.flush()
+                            time.sleep(1)
+                        except NoSuchElementException:
+                            print("\n✅ Chats loading completed - retrying Xpath002 search")
+                            # Reset timer and retry Xpath002 search
+                            start_time = time.time()
+                            break
+                            
+                except NoSuchElementException:
+                    print("❌ 'Loading your chats' not found - restarting process")
+                    close_chrome()
+                    return False
+                    
         except Exception as e:
             print(f"❌ Error during message field click: {str(e)}")
             time.sleep(1)
@@ -450,7 +586,7 @@ def paste_message_and_confirm():
         try:
             active_element = driver.switch_to.active_element
             active_element.send_keys("Facebook birthday bot - No more birthday today")
-            print("Message is typed")
+            print("✅ Message is typed")
             break
         except Exception as e:
             print(f"❌ Error typing message: {str(e)}")
@@ -462,7 +598,7 @@ def paste_message_and_confirm():
     try:
         active_element = driver.switch_to.active_element
         active_element.send_keys(Keys.RETURN)
-        print("Enter key pressed")
+        print("✅ Enter key pressed")
     except Exception as e:
         print(f"❌ Error pressing Enter: {str(e)}")
         return False
@@ -472,9 +608,9 @@ def paste_message_and_confirm():
     return whatsapp_xpath003
 
 def check_whatsapp_xpath003_availability(whatsapp_xpath003):
-    """Check WhatsApp XPath003 availability"""
+    """Check WhatsApp XPath003 availability with enhanced loading detection"""
     total_seconds = 0
-    sys.stdout.write("WhatsApp Xpath003 is available in 0 sec")
+    sys.stdout.write("⏳ WhatsApp Xpath003 is available in 0 sec")
     sys.stdout.flush()
     
     while True:
@@ -483,43 +619,83 @@ def check_whatsapp_xpath003_availability(whatsapp_xpath003):
         
         try:
             driver.find_element("xpath", whatsapp_xpath003)
-            sys.stdout.write('\r' + f"WhatsApp Xpath003 is available in {total_seconds} sec")
+            sys.stdout.write(f'\r⏳ WhatsApp Xpath003 is available in {total_seconds} sec')
             sys.stdout.flush()
             
             if total_seconds >= 120:
-                print("\nReached 120 seconds - proceeding to Step 13p")
-                close_chrome()
-                return True
+                print("\n⏳ Reached 120 seconds - checking for loading chats...")
+                
+                # Check for "Loading your chats" before proceeding
+                try:
+                    loading_element = driver.find_element("xpath", "//*[contains(text(), 'Loading your chats')]")
+                    print("🔍 'Loading your chats' found - waiting for completion with internet check...")
+                    
+                    loading_wait_start = time.time()
+                    last_internet_check = 0
+                    internet_check_interval = 5
+                    
+                    while True:
+                        current_loading_time = time.time()
+                        loading_elapsed = current_loading_time - loading_wait_start
+                        
+                        # Check internet every 5 seconds
+                        if current_loading_time - last_internet_check >= internet_check_interval:
+                            last_internet_check = current_loading_time
+                            
+                            if check_internet():
+                                print("🌐 Internet available - continuing to wait for loading...")
+                            else:
+                                print("❌ Internet not available while loading - closing browser")
+                                time.sleep(3)
+                                close_chrome()
+                                return False
+                        
+                        try:
+                            driver.find_element("xpath", "//*[contains(text(), 'Loading your chats')]")
+                            sys.stdout.write(f'\r⏳ Waiting for chats to load... ({int(loading_elapsed)}s)')
+                            sys.stdout.flush()
+                            time.sleep(1)
+                        except NoSuchElementException:
+                            print("\n✅ Chats loading completed - continuing to Step 13p")
+                            close_chrome()
+                            return True
+                            
+                except NoSuchElementException:
+                    print("❌ 'Loading your chats' not found - waiting 3 seconds for stability...")
+                    time.sleep(3)
+                    print("🔒 Closing the browser")
+                    close_chrome()
+                    return False
                 
         except NoSuchElementException:
-            print("\nWhatsApp Xpath003 is not available - waiting 3 seconds for stability...")
+            print("\n✅ WhatsApp Xpath003 is not available - message delivered")
             time.sleep(3)
-            print("Closing the browser")
+            print("🔒 Closing the browser")
             close_chrome()
-            return False
+            return True
         except Exception as e:
             print(f"\n❌ Error checking WhatsApp Xpath003: {str(e)}")
             time.sleep(3)
-            print("Closing the browser")
+            print("🔒 Closing the browser")
             close_chrome()
             return False
 
 def whatsapp_retry_flow():
-    """The retry flow when message is still pending after 120 seconds"""
+    """The retry flow when message is still pending after 120 seconds with enhanced loading detection"""
     while True:
         close_chrome()
         if not launch_chrome(url="https://web.whatsapp.com/", start_maximized=True):
             print("❌ Failed to open WhatsApp Web")
             time.sleep(1)
             continue
-        print("Entered WhatsApp Web")
+        print("✅ Entered WhatsApp Web")
         
         whatsapp_xpath001 = fetch_xpath_from_firebase("Xpath001", "WhatsApp")
-        print("WhatsApp Xpath001 fetched from database")
+        print("✅ WhatsApp Xpath001 fetched from database")
         
         while True:
             try:
-                if search_and_click_element(whatsapp_xpath001, "WhatsApp Xpath001 is clicked ready to search phone number"):
+                if search_and_click_whatsapp_xpath001(whatsapp_xpath001):
                     break
                 print("🔄 Restarting WhatsApp search click process...")
             except Exception as e:
@@ -535,7 +711,7 @@ def whatsapp_retry_flow():
                     
                     search_box = driver.switch_to.active_element
                     search_box.send_keys(phone_number)
-                    print(f"Mobile number transferred from text file to WhatsApp phone number search field: {phone_number}")
+                    print(f"📱 Mobile number transferred from text file to WhatsApp phone number search field: {phone_number}")
                     break
                     
             except Exception as e:
@@ -555,10 +731,10 @@ def whatsapp_retry_flow():
             continue
         
         whatsapp_xpath003 = fetch_xpath_from_firebase("Xpath003", "WhatsApp")
-        print("WhatsApp Xpath003 fetched from database")
+        print("✅ WhatsApp Xpath003 fetched from database")
         
         total_seconds = 0
-        sys.stdout.write("Checking WhatsApp Xpath003 for disappearance: 0 sec")
+        sys.stdout.write("🔍 Checking WhatsApp Xpath003 for disappearance: 0 sec")
         sys.stdout.flush()
         
         while total_seconds < 120:
@@ -567,10 +743,10 @@ def whatsapp_retry_flow():
             
             try:
                 driver.find_element("xpath", whatsapp_xpath003)
-                sys.stdout.write('\r' + f"Checking WhatsApp Xpath003 for disappearance: {total_seconds} sec")
+                sys.stdout.write(f'\r🔍 Checking WhatsApp Xpath003 for disappearance: {total_seconds} sec')
                 sys.stdout.flush()
             except NoSuchElementException:
-                print("\nWhatsApp Xpath003 is not present - close the browser and script")
+                print("\n✅ WhatsApp Xpath003 is not present - close the browser and script")
                 close_chrome()
                 return False
             except Exception as e:
@@ -578,7 +754,48 @@ def whatsapp_retry_flow():
                 close_chrome()
                 return False
         
-        print("\nWhatsApp Xpath003 is still present after 120 seconds - restarting flow")
+        print("\n⏳ WhatsApp Xpath003 is still present after 120 seconds - checking for loading chats...")
+        
+        # Check for "Loading your chats" before restarting with enhanced internet checking
+        try:
+            loading_element = driver.find_element("xpath", "//*[contains(text(), 'Loading your chats')]")
+            print("🔍 'Loading your chats' found - waiting for completion with internet check...")
+            
+            loading_wait_start = time.time()
+            last_internet_check = 0
+            internet_check_interval = 5
+            
+            while True:
+                current_loading_time = time.time()
+                loading_elapsed = current_loading_time - loading_wait_start
+                
+                # Check internet every 5 seconds
+                if current_loading_time - last_internet_check >= internet_check_interval:
+                    last_internet_check = current_loading_time
+                    
+                    if check_internet():
+                        print("🌐 Internet available - continuing to wait for loading...")
+                    else:
+                        print("❌ Internet not available while loading - restarting flow")
+                        break
+                
+                try:
+                    driver.find_element("xpath", "//*[contains(text(), 'Loading your chats')]")
+                    sys.stdout.write(f'\r⏳ Waiting for chats to load... ({int(loading_elapsed)}s)')
+                    sys.stdout.flush()
+                    time.sleep(1)
+                except NoSuchElementException:
+                    print("\n✅ Chats loading completed - restarting flow")
+                    break
+                    
+        except NoSuchElementException:
+            print("❌ 'Loading your chats' not found - restarting flow")
+        
+        print("🔄 WhatsApp Xpath003 is still present - restarting flow")
+
+# ================================
+# FACEBOOK BIRTHDAY FUNCTIONS (UNCHANGED)
+# ================================
 
 def modify_and_search_xpath004(original_xpath=None):
     """Modify XPath004 and search for it with refresh logic"""
@@ -1716,31 +1933,10 @@ def process_whatsapp_report_flow():
             print(f"❌ Error fetching WhatsApp Xpath001: {str(e)}. Retrying in 1 second...")
             time.sleep(1)
     
-    # Step 75: Search and click WhatsApp Xpath001 with refresh logic
-    start_time = time.time()
-    refresh_count = 0
-    
-    while True:
-        try:
-            element = driver.find_element("xpath", whatsapp_xpath001)
-            element.click()
-            print("✅ WhatsApp Xpath001 clicked - ready for phone number")
-            break
-        except NoSuchElementException:
-            elapsed = time.time() - start_time
-            if elapsed >= 120:
-                refresh_count += 1
-                print(f"🔄 Refreshing page (Attempt {refresh_count})...")
-                driver.refresh()
-                start_time = time.time()
-                time.sleep(3)
-            else:
-                sys.stdout.write(f'\r🔍 Searching for WhatsApp XPath001... ({int(elapsed)}s)')
-                sys.stdout.flush()
-                time.sleep(1)
-        except Exception as e:
-            print(f"❌ Error during WhatsApp XPath001 search: {str(e)}")
-            return False
+    # Step 75: Search and click WhatsApp Xpath001 with NEW loading detection logic
+    if not search_and_click_whatsapp_xpath001(whatsapp_xpath001):
+        print("❌ Failed to click WhatsApp Xpath001")
+        return False
     
     # Step 76: Get and paste phone number with unlimited retry
     while True:
